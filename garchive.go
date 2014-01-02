@@ -8,7 +8,7 @@ import (
 	"net"
 	"os"
 	"strings"
-        "time"
+	"time"
 )
 
 type IRCConnection struct {
@@ -48,7 +48,7 @@ func RawToIRCCommand(raw string) (*IRCCommand, error) {
 	}
 	args_start := 2
 	if strings.HasPrefix(split_ver[0], ":") {
-                command.Source = strings.TrimPrefix(split_ver[0], ":")
+		command.Source = strings.TrimPrefix(split_ver[0], ":")
 		command.Type = split_ver[1]
 	} else {
 		command.Type = split_ver[0]
@@ -146,14 +146,14 @@ func (connection *IRCConnection) Connect() error {
 		}
 	})
 
-        err = connection.SendCommand(MakeIRCCommand("NICK", "garchive"))
-        if err != nil {
-          return err
-        }
-        err = connection.SendCommand(MakeIRCCommand("USER", "guest", "hostname", "what", "My Real Name"))
-        if err != nil {
-          return err
-        }
+	err = connection.SendCommand(MakeIRCCommand("NICK", "garchive"))
+	if err != nil {
+		return err
+	}
+	err = connection.SendCommand(MakeIRCCommand("USER", "guest", "hostname", "what", "My Real Name"))
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -163,51 +163,51 @@ func (connection *IRCConnection) AddListener(fn IRCListener) {
 }
 
 func (connection *IRCConnection) SendCommand(command *IRCCommand) error {
-  log.Printf("Sending command %v\n", command)
-  raw_form, err := command.ToRaw()
-  log.Printf("raw form: %v\n", raw_form)
-  if err != nil {
-    return err
-  }
+	log.Printf("Sending command %v\n", command)
+	raw_form, err := command.ToRaw()
+	log.Printf("raw form: %v\n", raw_form)
+	if err != nil {
+		return err
+	}
 
-  fmt.Fprint(connection.Connection, raw_form)
+	fmt.Fprint(connection.Connection, raw_form)
 
-  return nil
+	return nil
 }
 
 func MakeChannelListener(channel string, filename string) (func(*IRCCommand), error) {
-  file, err := os.OpenFile(filename, os.O_WRONLY | os.O_APPEND | os.O_CREATE, 0666 )
-  if err != nil {
-    return nil, err
-  }
+	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
+	if err != nil {
+		return nil, err
+	}
 
-  fn := func(command *IRCCommand) {
-    line := ""
-    switch command.Type {
-      case "PRIVMSG":
-        if command.Args[0] == channel {
-          line = fmt.Sprintf("%s: %s\n", command.Source, command.Args[1])
-        }
-      case "JOIN":
-        if command.Args[0] == channel {
-          line = fmt.Sprintf("%s has joined %s\n", command.Source, channel)
-        }
-      case "PART":
-        if command.Args[0] == channel {
-          line = fmt.Sprintf("%s has left %s\n", command.Source, channel)
-        }
-      case "TOPIC":
-        if command.Args[0] == channel {
-          line = fmt.Sprintf("%s has set the topic to %s\n", command.Source, command.Args[1])
-        }
-    }
+	fn := func(command *IRCCommand) {
+		line := ""
+		switch command.Type {
+		case "PRIVMSG":
+			if command.Args[0] == channel {
+				line = fmt.Sprintf("%s: %s\n", command.Source, command.Args[1])
+			}
+		case "JOIN":
+			if command.Args[0] == channel {
+				line = fmt.Sprintf("%s has joined %s\n", command.Source, channel)
+			}
+		case "PART":
+			if command.Args[0] == channel {
+				line = fmt.Sprintf("%s has left %s\n", command.Source, channel)
+			}
+		case "TOPIC":
+			if command.Args[0] == channel {
+				line = fmt.Sprintf("%s has set the topic to %s\n", command.Source, command.Args[1])
+			}
+		}
 
-    if line != "" {
-      fmt.Fprintf(file, "[%v] %s", time.Now(), line)
-    }
-  }
+		if line != "" {
+			fmt.Fprintf(file, "[%v] %s", time.Now(), line)
+		}
+	}
 
-  return fn, nil
+	return fn, nil
 }
 
 func Main() {
@@ -226,17 +226,17 @@ func Main() {
 		log.Fatal(err)
 	}
 
-        err = connection.SendCommand(MakeIRCCommand("JOIN", "#chat"))
-        if err != nil {
-          log.Fatal(err)
-        }
-        channelListener, err := MakeChannelListener("#chat", "/tmp/chat")
-        if err != nil {
-          log.Fatal(err)
-        }
-        connection.AddListener(channelListener)
+	err = connection.SendCommand(MakeIRCCommand("JOIN", "#chat"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	channelListener, err := MakeChannelListener("#chat", "/tmp/chat")
+	if err != nil {
+		log.Fatal(err)
+	}
+	connection.AddListener(channelListener)
 
-        <-connection.Finished
+	<-connection.Finished
 
 	/*
 		conn, err := net.Dial("tcp", "irc.tropicalmug.com:6667")
