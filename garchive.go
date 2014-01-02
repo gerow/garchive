@@ -7,9 +7,9 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/user"
 	"strings"
 	"time"
-        "os/user"
 )
 
 type IRCConnection struct {
@@ -151,14 +151,14 @@ func (connection *IRCConnection) Connect() error {
 	if err != nil {
 		return err
 	}
-        /* query the local system for a username. This isn't *really* necessary,
-         * but it really isn't that big of a deal to do it aywa */
-        user, err := user.Current()
-        if err != nil {
-          log.Print(err)
-          user.Username = "unknown"
-        }
-        err = connection.SendCommand(MakeIRCCommand("USER", user.Username, "0", "*", "Garchive: An IRC archiver bot"))
+	/* query the local system for a username. This isn't *really* necessary,
+	 * but it really isn't that big of a deal to do it aywa */
+	user, err := user.Current()
+	if err != nil {
+		log.Print(err)
+		user.Username = "unknown"
+	}
+	err = connection.SendCommand(MakeIRCCommand("USER", user.Username, "0", "*", "Garchive: An IRC archiver bot"))
 	if err != nil {
 		return err
 	}
@@ -219,13 +219,13 @@ func MakeChannelListener(channel string, filename string) (func(*IRCCommand), er
 }
 
 func Main() {
-        if len(os.Args) < 4 {
-          fmt.Printf("Usage: %s irc_uri nick channel [other_channels...]\n", os.Args[0])
-          os.Exit(1)
-        }
-        uri := os.Args[1]
-        nick := os.Args[2]
-        channels := os.Args[3:len(os.Args)]
+	if len(os.Args) < 4 {
+		fmt.Printf("Usage: %s irc_uri nick channel [other_channels...]\n", os.Args[0])
+		os.Exit(1)
+	}
+	uri := os.Args[1]
+	nick := os.Args[2]
+	channels := os.Args[3:len(os.Args)]
 	connection := MakeConnection(uri, nick)
 
 	connection.AddListener(func(command *IRCCommand) {
@@ -236,31 +236,31 @@ func Main() {
 		}
 	})
 
-        for _, c := range channels {
-          fmt.Printf("Adding channel %v\n", c)
-        }
+	for _, c := range channels {
+		fmt.Printf("Adding channel %v\n", c)
+	}
 
 	err := connection.Connect()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-        for _, c := range channels {
-          /* allow the user to specify the channel without the #
-           * since bash requries it to be escaped */
-           if !strings.HasPrefix(c, "#") {
-             c = fmt.Sprintf("#%s", c)
-           }
-           err = connection.SendCommand(MakeIRCCommand("JOIN", c))
-           if err != nil {
-             log.Print(err)
-           }
-           channelListener, err := MakeChannelListener(c, strings.TrimPrefix(c, "#"))
-           if err != nil {
-             log.Print(err)
-           }
-           connection.AddListener(channelListener)
-        }
+	for _, c := range channels {
+		/* allow the user to specify the channel without the #
+		 * since bash requries it to be escaped */
+		if !strings.HasPrefix(c, "#") {
+			c = fmt.Sprintf("#%s", c)
+		}
+		err = connection.SendCommand(MakeIRCCommand("JOIN", c))
+		if err != nil {
+			log.Print(err)
+		}
+		channelListener, err := MakeChannelListener(c, strings.TrimPrefix(c, "#"))
+		if err != nil {
+			log.Print(err)
+		}
+		connection.AddListener(channelListener)
+	}
 
 	<-connection.Finished
 }
