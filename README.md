@@ -8,6 +8,9 @@ Make sure you have go installed and have your $GOPATH setup
 (if not check out [the golang installation page](http://golang.org/doc/install)). Now, simply run:
 
 `go get github.com/gerow/garchive`
+
+followed by
+
 `go install github.com/gerow/garchive/garchive`
 
 After this you should have a binary called "garchive" inside your 
