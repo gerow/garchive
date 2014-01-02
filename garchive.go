@@ -147,7 +147,7 @@ func (connection *IRCConnection) Connect() error {
 		}
 	})
 
-	err = connection.SendCommand(MakeIRCCommand("NICK", "garchive"))
+	err = connection.SendCommand(MakeIRCCommand("NICK", connection.Nick))
 	if err != nil {
 		return err
 	}
