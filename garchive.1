@@ -1,0 +1,55 @@
+.Dd Janurary 2, 2014
+.Dt GARCHIVE 1
+.Os
+.Sh NAME
+.Nm garchive
+.Nd IRC bot for archiving channel conversations
+.Sh SYNOPSIS
+.Nm
+.Ar server_uri
+.Ar nick
+.Ar channel
+.Op channels...
+.Sh DESCRIPTION
+The
+.Nm
+server is used to archive the conversations on the server
+.Ar server_uri
+in the channel
+.Ar channel
+or the channels
+.Op channels .
+.Nm
+connects to the server with the given using the given nick and joins the
+channels and writes all goings-on to a file in the current working directory
+with the same name as the channel.
+.Pp
+The following options are available:
+.Bl -tag -width indent
+.It Ar server_uri
+The uri of the server we want to connect to. For example: "irc.rizon.net:6667". Note that the port MUST be included.
+.It Ar nick
+The nick to use when connecting to the server.
+For example, "garchive-bot" isn't a bad choice.
+If the nick is already taken
+then the connection will fail.
+.It Ar channel
+The channel we want to archive. The channel name can be given in the form with
+or without the '#'. This is because typing a channel name with the '#' on the
+command line requires escaping it.
+.It Op channels...
+We can include more than one channel if the user wishes.
+.Sh ENVIRONMENT
+The following environment variables affect the execution of
+.Nm :
+None
+.Sh DIAGNOSTICS
+The
+.Nm
+bot will return a nonzero exit code if there is any problem trying to connect to
+the server. Any other errors will be simply logged to stderr and the bot will
+attempt to continue on.
+.Sh CAVEATS
+.Nm
+is not currently able to handle dropped connections and does not actively try
+to reconnect.
