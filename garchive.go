@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"time"
+        "os/user"
 )
 
 type IRCConnection struct {
@@ -150,7 +151,14 @@ func (connection *IRCConnection) Connect() error {
 	if err != nil {
 		return err
 	}
-	err = connection.SendCommand(MakeIRCCommand("USER", "guest", "hostname", "what", "My Real Name"))
+        /* query the local system for a username. This isn't *really* necessary,
+         * but it really isn't that big of a deal to do it aywa */
+        user, err := user.Current()
+        if err != nil {
+          log.Print(err)
+          user.Username = "unknown"
+        }
+        err = connection.SendCommand(MakeIRCCommand("USER", user.Username, "0", "*", "Garchive: An IRC archiver bot"))
 	if err != nil {
 		return err
 	}
@@ -211,7 +219,14 @@ func MakeChannelListener(channel string, filename string) (func(*IRCCommand), er
 }
 
 func Main() {
-	connection := MakeConnection("irc.tropicalmug.com:6667", "garchive")
+        if len(os.Args) < 4 {
+          fmt.Printf("Usage: %s irc_uri nick channel [other_channels...]\n", os.Args[0])
+          os.Exit(1)
+        }
+        uri := os.Args[1]
+        nick := os.Args[2]
+        channels := os.Args[3:len(os.Args)]
+	connection := MakeConnection(uri, nick)
 
 	connection.AddListener(func(command *IRCCommand) {
 		fmt.Printf("%v\n", command)
@@ -221,48 +236,31 @@ func Main() {
 		}
 	})
 
+        for _, c := range channels {
+          fmt.Printf("Adding channel %v\n", c)
+        }
+
 	err := connection.Connect()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = connection.SendCommand(MakeIRCCommand("JOIN", "#chat"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	channelListener, err := MakeChannelListener("#chat", "/tmp/chat")
-	if err != nil {
-		log.Fatal(err)
-	}
-	connection.AddListener(channelListener)
+        for _, c := range channels {
+          /* allow the user to specify the channel without the #
+           * since bash requries it to be escaped */
+           if !strings.HasPrefix(c, "#") {
+             c = fmt.Sprintf("#%s", c)
+           }
+           err = connection.SendCommand(MakeIRCCommand("JOIN", c))
+           if err != nil {
+             log.Print(err)
+           }
+           channelListener, err := MakeChannelListener(c, strings.TrimPrefix(c, "#"))
+           if err != nil {
+             log.Print(err)
+           }
+           connection.AddListener(channelListener)
+        }
 
 	<-connection.Finished
-
-	/*
-		conn, err := net.Dial("tcp", "irc.tropicalmug.com:6667")
-		if err != nil {
-			log.Fatal(err)
-		}
-		go func() {
-			i := 0
-			for {
-				status, err := bufio.NewReader(conn).ReadString('\n')
-				if err != nil {
-					log.Fatal(err)
-				}
-				fmt.Printf("msg %d: %s", i, status)
-				i++
-			}
-		}()
-		fmt.Fprintf(conn, "NICK garchive\r\n")
-		fmt.Fprintf(conn, "USER guest hostname what :My Real Name\r\n")
-		bio := bufio.NewReader(os.Stdin)
-		for {
-			line, _, err := bio.ReadLine()
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Fprintf(conn, "%s\r\n", line)
-		}
-	*/
 }
