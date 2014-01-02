@@ -1,6 +1,6 @@
 garchive
 ========
-A tool for archiving IRC channels.
+A tool for archiving IRC channel discussions.
 
 Installation
 ============
