@@ -208,6 +208,8 @@ func MakeChannelListener(channel string, filename string) (func(*IRCCommand), er
 			if command.Args[0] == channel {
 				line = fmt.Sprintf("%s has set the topic to %s\n", command.Source, command.Args[1])
 			}
+                case "QUIT":
+                        line = fmt.Sprintf("%s has quit: %s\n", command.Source, command.Args[0])
 		}
 
 		if line != "" {
